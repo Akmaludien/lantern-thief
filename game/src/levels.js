@@ -22,7 +22,7 @@ export const LEVELS = [
     name: 'Entrance Hall',
     subtitle: 'Learn the dark — two guards, one relic',
     relicName: 'Ember Idol',
-    darkness: 0.55,
+    darkness: 0.52,
     spawn: { x: 120, y: 680 },
     exit: { x: 1180, y: 340, w: 60, h: 120 },
     relic: { x: 1120, y: 120 },
@@ -41,20 +41,24 @@ export const LEVELS = [
     ],
     guards: [
       {
+        // North loop: stays clear of the centre wall, the book chest and
+        // both shelves, so the loop actually completes.
         waypoints: [
-          { x: 300, y: 150 },
-          { x: 900, y: 150 },
-          { x: 900, y: 520 },
-          { x: 300, y: 520 },
+          { x: 360, y: 120 },
+          { x: 760, y: 120 },
+          { x: 760, y: 460 },
+          { x: 360, y: 460 },
         ],
         pause: 1.2,
       },
       {
+        // South-east loop: skirts the tall wall and the south chest
+        // instead of walking through them.
         waypoints: [
-          { x: 620, y: 640 },
-          { x: 1080, y: 640 },
-          { x: 1080, y: 320 },
-          { x: 620, y: 320 },
+          { x: 620, y: 700 },
+          { x: 1120, y: 700 },
+          { x: 1120, y: 360 },
+          { x: 620, y: 360 },
         ],
         pause: 1.6,
       },
@@ -65,7 +69,7 @@ export const LEVELS = [
     name: 'Gallery',
     subtitle: 'More shelves, more eyes — three guards, one relic',
     relicName: 'Moon Pearl',
-    darkness: 0.62,
+    darkness: 0.58,
     spawn: { x: 120, y: 680 },
     exit: { x: 1180, y: 340, w: 60, h: 120 },
     relic: { x: 150, y: 120 },
@@ -87,29 +91,37 @@ export const LEVELS = [
     ],
     guards: [
       {
+        // West loop: threads the corridor west of the tall wall and the
+        // low shelf, down to the south-west corner and back.
         waypoints: [
-          { x: 240, y: 180 },
-          { x: 640, y: 180 },
-          { x: 640, y: 480 },
-          { x: 240, y: 480 },
+          { x: 120, y: 120 },
+          { x: 280, y: 120 },
+          { x: 280, y: 260 },
+          { x: 170, y: 260 },
+          { x: 170, y: 480 },
+          { x: 120, y: 480 },
         ],
         pause: 1.0,
       },
       {
+        // East loop: walks the exit door's frame instead of through the
+        // door, and stays east of the south shelf.
         waypoints: [
-          { x: 880, y: 120 },
-          { x: 1160, y: 120 },
-          { x: 1160, y: 620 },
-          { x: 880, y: 620 },
+          { x: 840, y: 220 },
+          { x: 1180, y: 220 },
+          { x: 1180, y: 620 },
+          { x: 840, y: 620 },
         ],
         pause: 1.4,
       },
       {
+        // Centre loop: between the tall wall and the centre wall, north
+        // of the low wall — a tight box around the gallery's middle.
         waypoints: [
-          { x: 480, y: 660 },
-          { x: 800, y: 660 },
-          { x: 800, y: 300 },
-          { x: 480, y: 300 },
+          { x: 400, y: 480 },
+          { x: 700, y: 480 },
+          { x: 700, y: 260 },
+          { x: 400, y: 260 },
         ],
         pause: 1.8,
       },
@@ -120,7 +132,7 @@ export const LEVELS = [
     name: 'Vault',
     subtitle: 'Four guards, tight patrols, almost no light',
     relicName: 'Gilded Key',
-    darkness: 0.78,
+    darkness: 0.74,
     spawn: { x: 120, y: 120 },
     exit: { x: 1180, y: 340, w: 60, h: 120 },
     relic: { x: 640, y: 400 },
@@ -143,38 +155,46 @@ export const LEVELS = [
     ],
     guards: [
       {
+        // West loop: north corridor, then down the west edge past the
+        // chest and the low shelf.
         waypoints: [
-          { x: 200, y: 200 },
-          { x: 500, y: 200 },
-          { x: 500, y: 460 },
-          { x: 200, y: 460 },
+          { x: 140, y: 120 },
+          { x: 540, y: 120 },
+          { x: 540, y: 460 },
+          { x: 140, y: 460 },
         ],
         pause: 0.9,
       },
       {
+        // Centre-north loop: between the two tall walls, above the
+        // vault's middle wall.
         waypoints: [
           { x: 660, y: 140 },
           { x: 920, y: 140 },
-          { x: 920, y: 460 },
-          { x: 660, y: 460 },
+          { x: 920, y: 340 },
+          { x: 660, y: 340 },
         ],
         pause: 1.1,
       },
       {
+        // South loop: the corridor below the low wall, between the
+        // south shelf and the border.
         waypoints: [
-          { x: 420, y: 620 },
-          { x: 760, y: 620 },
-          { x: 760, y: 320 },
-          { x: 420, y: 320 },
+          { x: 400, y: 680 },
+          { x: 800, y: 680 },
+          { x: 800, y: 740 },
+          { x: 400, y: 740 },
         ],
         pause: 1.3,
       },
       {
+        // East loop: down the exit side, west of the pillar, watching
+        // the door without standing in it.
         waypoints: [
-          { x: 1000, y: 560 },
-          { x: 1160, y: 560 },
-          { x: 1160, y: 200 },
-          { x: 1000, y: 200 },
+          { x: 920, y: 120 },
+          { x: 1160, y: 120 },
+          { x: 1160, y: 620 },
+          { x: 920, y: 620 },
         ],
         pause: 1.0,
       },

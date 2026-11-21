@@ -139,6 +139,12 @@ export function updateGuard(guard, seconds, world) {
     const rate = (26 + 58 * closeness) * (player.sneaking ? 0.55 : 1);
     guard.suspicion = Math.min(100, guard.suspicion + rate * seconds);
     guard.unseenLeft = 0;
+    // Once half-sure, the guard remembers where it last saw Wick and walks
+    // over to check — a patient player who breaks line of sight early is
+    // never chased for a glimpse.
+    if (guard.suspicion >= 55 && guard.state === 'patrol') {
+      guard.investigateTarget = { x: player.x, y: player.y };
+    }
   } else {
     guard.suspicion = Math.max(0, guard.suspicion - 22 * seconds);
   }
@@ -196,18 +202,40 @@ export function updateGuard(guard, seconds, world) {
     }
     case 'return': {
       // Walk back to the nearest waypoint, then resume the patrol loop.
-      let nearest = guard.waypoints[0];
-      let nearestDistance = Infinity;
-      for (const point of guard.waypoints) {
-        const d = Math.hypot(point.x - guard.x, point.y - guard.y);
-        if (d < nearestDistance) {
-          nearestDistance = d;
-          nearest = point;
+      // returnTarget remembers a detour once one is chosen, so the guard
+      // commits to it instead of retrying a blocked waypoint every frame.
+      let target = guard.returnTarget;
+      if (!target) {
+        let nearest = guard.waypoints[0];
+        let nearestDistance = Infinity;
+        for (const point of guard.waypoints) {
+          const d = Math.hypot(point.x - guard.x, point.y - guard.y);
+          if (d < nearestDistance) {
+            nearestDistance = d;
+            nearest = point;
+          }
         }
+        target = nearest;
       }
-      if (moveToward(guard, nearest.x, nearest.y, GUARD_PATROL_SPEED * 1.2, seconds, solids)) {
-        guard.waypointIndex = guard.waypoints.indexOf(nearest);
+      const beforeX = guard.x;
+      const beforeY = guard.y;
+      if (moveToward(guard, target.x, target.y, GUARD_PATROL_SPEED * 1.2, seconds, solids)) {
+        guard.waypointIndex = guard.waypoints.indexOf(target);
+        guard.returnTarget = null;
+        guard.returnStuck = 0;
         guard.state = 'patrol';
+        break;
+      }
+      // A straight line home can run into a shelf: if the guard has made no
+      // progress for a while, commit to the next waypoint in the loop
+      // instead — patrol legs are open by design, so the loop always
+      // unblocks. Without this a guard can stall against cover.
+      const moved = Math.hypot(guard.x - beforeX, guard.y - beforeY);
+      guard.returnStuck = moved < 0.2 ? (guard.returnStuck || 0) + seconds : 0;
+      if (guard.returnStuck > 1.5) {
+        guard.returnStuck = 0;
+        const nextIndex = (guard.waypoints.indexOf(target) + 1) % guard.waypoints.length;
+        guard.returnTarget = guard.waypoints[nextIndex];
       }
       break;
     }

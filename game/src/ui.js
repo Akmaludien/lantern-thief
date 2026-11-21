@@ -71,10 +71,10 @@ export function createUi(canvas) {
     ctx.strokeStyle = '#8a86b0';
     ctx.lineWidth = 1;
     ctx.strokeRect(640, 17, 220, 18);
-    ctx.fillStyle = '#e8e4ff';
+    ctx.fillStyle = suspicion >= 100 ? '#ff5030' : suspicion >= 55 ? '#ff9a3a' : '#e8e4ff';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(suspicion >= 100 ? 'ALARM!' : 'Suspicion', 868, 27);
+    ctx.fillText(suspicion >= 100 ? 'ALARM!' : suspicion >= 55 ? 'Suspicious…' : 'Suspicion', 868, 27);
     // Timer and lantern state, kept clear of the pause button at x 1216.
     const minutes = Math.floor(levelTime / 60);
     const seconds = Math.floor(levelTime % 60);

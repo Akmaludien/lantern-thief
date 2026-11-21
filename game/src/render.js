@@ -143,19 +143,41 @@ export function createRenderer(canvas) {
     const range = GUARD_VIEW_RANGE * (player.lanternOn ? 1.45 : 0.78);
     const suspicious = guard.suspicion >= 55 || guard.state === 'chase';
     const chasing = guard.state === 'chase';
+    // Warm yellow while calm, orange while suspicious, red while chasing:
+    // the cone's colour is the guard's mood, readable at a glance.
+    const rgb = chasing ? '255, 60, 40' : suspicious ? '255, 110, 50' : '255, 214, 90';
+    const coreAlpha = chasing ? 0.5 : suspicious ? 0.4 : 0.3;
+    const edgeAlpha = chasing ? 0.75 : suspicious ? 0.6 : 0.42;
+    const gradient = ctx.createRadialGradient(guard.x, guard.y, 12, guard.x, guard.y, range);
+    gradient.addColorStop(0, `rgba(${rgb}, ${coreAlpha})`);
+    gradient.addColorStop(0.65, `rgba(${rgb}, ${coreAlpha * 0.55})`);
+    gradient.addColorStop(1, `rgba(${rgb}, 0.04)`);
     ctx.beginPath();
     ctx.moveTo(guard.x, guard.y);
     ctx.arc(guard.x, guard.y, range, guard.facing - GUARD_HALF_ANGLE, guard.facing + GUARD_HALF_ANGLE);
     ctx.closePath();
-    ctx.fillStyle = chasing
-      ? 'rgba(255, 60, 40, 0.34)'
-      : suspicious
-        ? 'rgba(255, 90, 60, 0.28)'
-        : 'rgba(255, 214, 90, 0.18)';
+    ctx.fillStyle = gradient;
     ctx.fill();
+    // Crisp rim so the cone's edge reads even where the floor is dark.
+    ctx.strokeStyle = `rgba(${rgb}, ${edgeAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 
   function drawGuard(guard) {
+    // Warm halo lifts the guard off the dark floor before the body is drawn.
+    const halo = ctx.createRadialGradient(guard.x, guard.y, 8, guard.x, guard.y, 52);
+    halo.addColorStop(0, 'rgba(245, 166, 35, 0.28)');
+    halo.addColorStop(1, 'rgba(245, 166, 35, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(guard.x, guard.y, 52, 0, Math.PI * 2);
+    ctx.fill();
+    // Soft shadow under the body for depth.
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(guard.x, guard.y + guard.radius - 2, guard.radius + 3, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#f5a623';
     ctx.beginPath();
     ctx.arc(guard.x, guard.y, guard.radius, 0, Math.PI * 2);
@@ -163,16 +185,25 @@ export function createRenderer(canvas) {
     ctx.strokeStyle = '#8a5a10';
     ctx.lineWidth = 3;
     ctx.stroke();
+    // Bright rim on the body's lit edge.
+    ctx.strokeStyle = '#ffe1a0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(guard.x, guard.y, guard.radius - 2, 0, Math.PI * 2);
+    ctx.stroke();
     // Cap brim shows which way the guard faces.
     const bx = guard.x + Math.cos(guard.facing) * 10;
     const by = guard.y + Math.sin(guard.facing) * 10;
-    ctx.fillStyle = '#d97b1e';
+    ctx.fillStyle = '#e08a1a';
     ctx.beginPath();
-    ctx.arc(bx, by, 6, 0, Math.PI * 2);
+    ctx.arc(bx, by, 7, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#ffe1a0';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     ctx.fillStyle = '#ffd9a0';
     ctx.beginPath();
-    ctx.arc(guard.x, guard.y, 5, 0, Math.PI * 2);
+    ctx.arc(guard.x, guard.y, 6, 0, Math.PI * 2);
     ctx.fill();
     // Suspicion ticks above the head.
     if (guard.suspicion > 5) {
@@ -199,21 +230,38 @@ export function createRenderer(canvas) {
 
   function drawPlayer(player, time) {
     if (player.lanternOn) {
-      const glow = ctx.createRadialGradient(player.x, player.y, 10, player.x, player.y, 120);
-      glow.addColorStop(0, 'rgba(255, 200, 110, 0.35)');
-      glow.addColorStop(1, 'rgba(255, 200, 110, 0)');
-      ctx.fillStyle = glow;
+      // Two-layer lantern glow: a hot core and a wide warm pool on the floor.
+      const flicker = 1 + Math.sin(time * 9) * 0.1 + Math.sin(time * 23) * 0.05;
+      const pool = ctx.createRadialGradient(player.x, player.y, 10, player.x, player.y, 200 * flicker);
+      pool.addColorStop(0, 'rgba(255, 205, 115, 0.34)');
+      pool.addColorStop(0.55, 'rgba(255, 190, 90, 0.16)');
+      pool.addColorStop(1, 'rgba(255, 190, 90, 0)');
+      ctx.fillStyle = pool;
       ctx.beginPath();
-      ctx.arc(player.x, player.y, 120, 0, Math.PI * 2);
+      ctx.arc(player.x, player.y, 200 * flicker, 0, Math.PI * 2);
+      ctx.fill();
+      const core = ctx.createRadialGradient(player.x, player.y, 4, player.x, player.y, 80);
+      core.addColorStop(0, 'rgba(255, 220, 140, 0.4)');
+      core.addColorStop(1, 'rgba(255, 220, 140, 0)');
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, 80, 0, Math.PI * 2);
       ctx.fill();
     }
-    // Hooded cloak.
-    ctx.fillStyle = '#2b2f4a';
+    // Hooded cloak — lighter than the floor, with a warm rim on the lantern
+    // side so Wick never melts into the dark.
+    ctx.fillStyle = '#3a4066';
     ctx.beginPath();
     ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#14162a';
     ctx.lineWidth = 3;
+    ctx.stroke();
+    const rimAngle = Math.atan2(player.facingY, player.facingX);
+    ctx.strokeStyle = player.lanternOn ? 'rgba(255, 205, 120, 0.95)' : 'rgba(160, 170, 230, 0.4)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius - 1.5, rimAngle - 1.1, rimAngle + 1.1);
     ctx.stroke();
     // Face shadow and the lantern flame.
     ctx.fillStyle = '#e8d9b0';
@@ -224,9 +272,20 @@ export function createRenderer(canvas) {
       const flicker = 1 + Math.sin(time * 9) * 0.12;
       const lx = player.x + player.facingX * 18;
       const ly = player.y + player.facingY * 18;
+      const flameHalo = ctx.createRadialGradient(lx, ly, 1, lx, ly, 20);
+      flameHalo.addColorStop(0, 'rgba(255, 215, 106, 0.85)');
+      flameHalo.addColorStop(1, 'rgba(255, 215, 106, 0)');
+      ctx.fillStyle = flameHalo;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 20, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = '#ffd76a';
       ctx.beginPath();
-      ctx.arc(lx, ly, 5 * flicker, 0, Math.PI * 2);
+      ctx.arc(lx, ly, 6 * flicker, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff3c4';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2.5 * flicker, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -251,18 +310,41 @@ export function createRenderer(canvas) {
     darkCtx.globalCompositeOperation = 'destination-out';
     punchLightHole(player.x, player.y, player.sightRadius || 200);
     for (const guard of guards) {
-      punchLightHole(guard.x, guard.y, 95);
+      punchLightHole(guard.x, guard.y, 105);
     }
     if (!state.relicTaken) {
-      punchLightHole(level.relic.x, level.relic.y, 70 + Math.sin(time * 3) * 8);
+      punchLightHole(level.relic.x, level.relic.y, 80 + Math.sin(time * 3) * 8);
     }
-    punchLightHole(level.exit.x + level.exit.w / 2, level.exit.y + level.exit.h / 2, 80);
+    punchLightHole(level.exit.x + level.exit.w / 2, level.exit.y + level.exit.h / 2, 90);
     ctx.drawImage(darkLayer, 0, 0);
+  }
+
+  // Faint dotted patrol routes: a guard's loop can be learned before it is
+  // risked, which is what makes a patient route rewarding.
+  function drawPatrolRoutes(guards) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(200, 190, 255, 0.10)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([2, 10]);
+    ctx.lineCap = 'round';
+    for (const guard of guards) {
+      const points = guard.waypoints;
+      if (!points || points.length < 2) continue;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function draw(state) {
     const { level, player, guards, time } = state;
     drawFloor();
+    drawPatrolRoutes(guards);
     drawWalls(level.walls);
     for (const piece of level.cover) drawCover(piece);
     drawExit(level.exit, state.exitOpen);

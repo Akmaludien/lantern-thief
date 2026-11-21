@@ -176,8 +176,10 @@ function stageShot(kind) {
   state.frozen = true;
   if (kind === 'cover') {
     loadLevel(1);
+    // Tucked tight under the Gallery shelf, lantern lit: the cone of the
+    // guard below sweeps up over the shelf while Wick waits it out.
     state.player.x = 620;
-    state.player.y = 250;
+    state.player.y = 242;
     state.player.lanternOn = true;
     state.player.facingX = 0;
     state.player.facingY = 1;
