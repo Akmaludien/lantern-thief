@@ -27,9 +27,16 @@ function copyTree(fromDir, toDir) {
   }
 }
 
+/** Empty the output directory without removing the directory itself: in the grader /output is a mount point whose parent is read-only, so deleting it fails (EACCES/EPERM) and the program exits 1. */
+function clearDir(dir: string) {
+  mkdirSync(dir, { recursive: true });
+  for (const entry of readdirSync(dir)) {
+    rmSync(join(dir, entry), { recursive: true, force: true });
+  }
+}
+
 function main() {
-  rmSync(outputDir, { recursive: true, force: true });
-  mkdirSync(outputDir, { recursive: true });
+  clearDir(outputDir);
 
   const gameDir = join(repoRoot, 'game');
   const shotsDir = join(repoRoot, 'screenshots');
